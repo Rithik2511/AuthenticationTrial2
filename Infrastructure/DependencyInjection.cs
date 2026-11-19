@@ -2,6 +2,7 @@
 using Infrastructure.Persistance.Connectrion.DBContext;
 using Infrastructure.Persistance.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -60,6 +61,28 @@ namespace Infrastructure
                             {
                                 context.Token = token;
                             }
+                            return Task.CompletedTask;
+                        },
+                        OnChallenge = context =>
+                        {
+                            // 1. Suppress the default 401 empty response
+                            context.HandleResponse();
+
+                            // 2. Check if it's an API/AJAX call vs a normal browser page navigation
+                            var isApiRequest = context.Request.Path.StartsWithSegments("/api") ||
+                                               context.Request.Headers.Accept.ToString().Contains("application/json");
+
+                            if (isApiRequest)
+                            {
+                                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                            }
+                            else
+                            {
+                                // 3. Redirect normal page visits to the login page (preserving ReturnUrl)
+                                var returnUrl = Uri.EscapeDataString(context.Request.Path + context.Request.QueryString);
+                                context.Response.Redirect($"/login?returnUrl={returnUrl}");
+                            }
+
                             return Task.CompletedTask;
                         }
                     };

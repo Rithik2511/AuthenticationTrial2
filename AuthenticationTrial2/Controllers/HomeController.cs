@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using AuthenticationTrial2.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AuthenticationTrial2.Controllers
@@ -12,7 +13,7 @@ namespace AuthenticationTrial2.Controllers
         {
             _logger = logger;
         }
-
+        [Authorize]
         public IActionResult Index()
         {
             return View();
